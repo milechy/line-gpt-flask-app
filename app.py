@@ -20,17 +20,17 @@ app = Flask(__name__)
 def index():
     return "OK"
 
-@app.route("/webhook", methods=['POST'])
+@app.route("/webhook", methods=["POST"])
 def webhook():
-    signature = request.headers['X-Line-Signature']
+    signature = request.headers["X-Line-Signature"]
     body = request.get_data(as_text=True)
 
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
-        return "Invalid signature", 400
+        abort(400)
 
-    return 'OK'
+    return "OK"
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
