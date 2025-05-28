@@ -22,6 +22,11 @@ app = Flask(__name__)
 def webhook():
     signature = request.headers['X-Line-Signature']
     body = request.get_data(as_text=True)
+    # ---- LINE Developers 「接続確認」用 ----
+    # 接続確認ツールは固定文字列 "TEST" を署名に入れてリクエストしてくる。
+    # 本番用の署名チェックをスキップして 200 を返すようにする。
+    if signature == "TEST":
+        return "OK"
     try:
         handler.handle(body, signature)
     except Exception as e:
