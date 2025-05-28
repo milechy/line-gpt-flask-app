@@ -3,3 +3,4 @@ gunicorn
 openai
 line-bot-sdk
 supabase
+boto3
