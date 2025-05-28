@@ -18,6 +18,7 @@ httpx==0.28.1
 hyperframe==6.1.0
 idna==3.10
 iniconfig==2.1.0
+line-bot-sdk
 multidict==6.4.4
 packaging==25.0
 pluggy==1.6.0
