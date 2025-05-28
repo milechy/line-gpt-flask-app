@@ -2,9 +2,18 @@ from flask import Flask, request, abort
 from linebot.models import FlexSendMessage, TextSendMessage, MessageEvent, TextMessage
 from linebot import LineBotApi, WebhookHandler
 
-# LINE credentials (replace with your actual tokens)
-line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
-handler = WebhookHandler('YOUR_CHANNEL_SECRET')
+import os
+
+
+# --- LINE credentials are now taken from environment variables ---
+LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
+LINE_CHANNEL_SECRET       = os.getenv("LINE_CHANNEL_SECRET")
+
+if not LINE_CHANNEL_ACCESS_TOKEN or not LINE_CHANNEL_SECRET:
+    raise RuntimeError("⚠️ Environment variables LINE_CHANNEL_ACCESS_TOKEN and/or LINE_CHANNEL_SECRET are not set.")
+
+line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
+handler      = WebhookHandler(LINE_CHANNEL_SECRET)
 
 app = Flask(__name__)
 
