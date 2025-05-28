@@ -1,156 +1,154 @@
 from flask import Flask, request, abort
+from linebot.models import FlexSendMessage, TextSendMessage, MessageEvent, TextMessage
 from linebot import LineBotApi, WebhookHandler
-from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
-from supabase import create_client
-import openai
-import os
 
-# 環境変数
-LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
-LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-# 初期化
-line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
-handler = WebhookHandler(LINE_CHANNEL_SECRET)
-openai.api_key = OPENAI_API_KEY
+# LINE credentials (replace with your actual tokens)
+line_bot_api = LineBotApi('YOUR_CHANNEL_ACCESS_TOKEN')
+handler = WebhookHandler('YOUR_CHANNEL_SECRET')
 
 app = Flask(__name__)
 
-@app.route("/", methods=['GET'])
-def index():
-    return "OK"
-
-@app.route("/webhook", methods=["POST"])
+# Webhook endpoint
+@app.route("/webhook", methods=['POST'])
 def webhook():
-    signature = request.headers["X-Line-Signature"]
+    signature = request.headers['X-Line-Signature']
     body = request.get_data(as_text=True)
-
     try:
         handler.handle(body, signature)
-    except InvalidSignatureError:
+    except Exception as e:
+        print("Webhook Error:", e)
         abort(400)
+    return 'OK'
 
-    return "OK"
-
+import json
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_input = event.message.text
-    reply = generate_gpt_reply(user_input)
-
-    # データベース保存
+    user_input = event.message.text.strip()
     user_id = event.source.user_id
-    save_conversation(
-    user_id=event.source.user_id,
-    character="未設定",  # 後で会話スタイルを選ばせるように拡張可能
-    message=user_input,
-    reply=reply
-)
+    print(f"[DEBUG] Received message: '{user_input}' from user: {user_id}")
 
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply)
-    )
+    # キャラ変更のリクエストがあれば優先して処理
+    if user_input.strip() in ["キャラ変更", "キャラ選択"]:
+        print("[DEBUG] Character change request detected")
+        flex_contents = create_character_selection_flex()
+        print("[DEBUG] Flex contents:", json.dumps(flex_contents, ensure_ascii=False))
+        flex_message = FlexSendMessage(
+            alt_text="キャラクターを選んでください",
+            contents=flex_contents
+        )
+        reply = "キャラクターを変更します。以下から選んでください。"
+        try:
+            line_bot_api.reply_message(event.reply_token, [
+                TextSendMessage(text=reply),
+                flex_message
+            ])
+            save_conversation(user_id, "未設定", user_input, reply)
+        except Exception as e:
+            import traceback
+            print("Reply Error:", e)
+            traceback.print_exc()
+        return
 
-def generate_gpt_reply(user_input):
+    # ボタン押下によるアクション処理
+    if user_input in ["ホームページの困りごと相談", "ホームページの見積もり診断", "ホームページの困りごとを相談したい", "ホームページの見積もりを診断してほしい", "ホームページの困りごと", "見積もり診断"]:
+        character = get_user_character(user_id)
+        if not character:
+            print("[DEBUG] Sending character selection Flex message")
+            flex_message = FlexSendMessage(
+                alt_text="キャラクターを選んでください",
+                contents=create_character_selection_flex()
+            )
+            line_bot_api.reply_message(event.reply_token, flex_message)
+            return
+
+        reply = generate_gpt_reply(user_input, character)
+        save_conversation(user_id, character, user_input, reply)
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
+        return
+
+    # 通常のメッセージ処理
+    character = get_user_character(user_id)
+    if not character:
+        print("[DEBUG] Sending character selection Flex message")
+        flex_message = FlexSendMessage(
+            alt_text="キャラクターを選んでください",
+            contents=create_character_selection_flex()
+        )
+        line_bot_api.reply_message(event.reply_token, flex_message)
+        return
+
+    reply = generate_gpt_reply(user_input, character)
+    save_conversation(user_id, character, user_input, reply)
+    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
+
+
+# --- generate_gpt_reply 関数の防御的実装 ---
+def generate_gpt_reply(user_input, character):
+    if not character or character == "未設定":
+        return "キャラクターが未設定です。先にキャラクターを選択してください。"
+
     messages = [
-        {"role": "system", "content": "あなたは親切なWeb制作診断AIです。毎回必ず『前の回答に感謝＋次の質問』を1メッセージ内で返してください。"},
+        {"role": "system", "content": f"あなたは{character}というキャラクターになりきって親切なWeb制作診断AIです。"},
         {"role": "user", "content": user_input}
     ]
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",  # 一時的にgpt-3.5-turboに変更
             messages=messages,
             temperature=0.7,
             max_tokens=500
         )
         return response["choices"][0]["message"]["content"]
     except Exception as e:
-        return "申し訳ありません、少し問題が発生しました。もう一度お試しください。"
+        import traceback
+        print("GPT Error:", e)
+        traceback.print_exc()
+        return f"⚠️ GPTエラーが発生しました: {str(e)}"
 
-def save_conversation(user_id, character, message, reply):
-    try:
-        response = supabase.table("chat_logs").insert({
-            "user_id": user_id,
-            "character": character,
-            "message": message,
-            "reply": reply
-        }).execute()
-        print("Supabase Insert Success:", response)
-    except Exception as e:
-        print("Supabase Insert Error:", e)
 
-import boto3
-from botocore.exceptions import NoCredentialsError
-
-# Wasabi 設定
-WASABI_ACCESS_KEY = os.getenv("WASABI_ACCESS_KEY")
-WASABI_SECRET_KEY = os.getenv("WASABI_SECRET_KEY")
-WASABI_BUCKET_NAME = os.getenv("WASABI_BUCKET_NAME")
-WASABI_ENDPOINT_URL = "https://s3.ap-northeast-1.wasabisys.com"
-
-def upload_file_to_wasabi(file_path, object_name):
-    try:
-        s3 = boto3.client(
-            's3',
-            endpoint_url=WASABI_ENDPOINT_URL,
-            aws_access_key_id=WASABI_ACCESS_KEY,
-            aws_secret_access_key=WASABI_SECRET_KEY
-        )
-        s3.upload_file(file_path, WASABI_BUCKET_NAME, object_name)
-        print("✅ Upload Successful:", object_name)
-        return True
-    except FileNotFoundError:
-        print("❌ File not found.")
-        return False
-    except NoCredentialsError:
-        print("❌ Credentials not available.")
-        return False
-    
-from linebot.models import ImageMessage
-import tempfile
-
-@handler.add(MessageEvent, message=ImageMessage)
-def handle_image(event):
-    print("📸 画像メッセージを受信しました")
-    message_id = event.message.id
-
-    # 一時ファイルを保存
-    message_content = line_bot_api.get_message_content(message_id)
-    with tempfile.NamedTemporaryFile(delete=False) as tf:
-        for chunk in message_content.iter_content():
-            tf.write(chunk)
-        temp_file_path = tf.name
-
-    # ファイル名（例：user_id/timestamp.jpg）
-    import time
-    user_id = event.source.user_id
-    filename = f"{user_id}/{int(time.time())}.jpg"
-
-    # Wasabiにアップロード
-    success = upload_file_to_wasabi(temp_file_path, filename)
-
-    # ✅ Supabaseに記録
-    save_conversation(
-        user_id=user_id,
-        character="未設定",
-        message="[画像アップロード]",
-        reply=f"[Wasabiに保存済み: {filename}]"
-    )
-
-    # ユーザーに返信
-    reply_text = "✅ 画像をアップロードしました！" if success else "❌ アップロードに失敗しました。"
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_text)
-    )
-
-    # 一時ファイル削除
-    os.remove(temp_file_path)
-
-if __name__ == "__main__":
-    app.run(debug=True)
+def create_character_selection_flex():
+    return {
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {"type": "text", "text": "キャラクターを選んでください", "weight": "bold", "size": "lg", "margin": "md"},
+                {"type": "separator", "margin": "md"},
+                {
+                    "type": "button",
+                    "action": {"type": "postback", "label": "柚葉", "data": "SET_CHARACTER:柚葉"},
+                    "style": "primary"
+                },
+                {
+                    "type": "button",
+                    "action": {"type": "postback", "label": "優芽", "data": "SET_CHARACTER:優芽"},
+                    "style": "primary"
+                },
+                {
+                    "type": "button",
+                    "action": {"type": "postback", "label": "澪", "data": "SET_CHARACTER:澪"},
+                    "style": "primary"
+                },
+                {
+                    "type": "button",
+                    "action": {"type": "postback", "label": "剣太郎", "data": "SET_CHARACTER:剣太郎"},
+                    "style": "primary"
+                },
+                {
+                    "type": "button",
+                    "action": {"type": "postback", "label": "鈴木", "data": "SET_CHARACTER:鈴木"},
+                    "style": "primary"
+                },
+                {
+                    "type": "button",
+                    "action": {"type": "postback", "label": "陽菜", "data": "SET_CHARACTER:陽菜"},
+                    "style": "primary"
+                }
+            ]
+        }
+    }
+@app.route("/debug/flex")
+def debug_flex():
+    from flask import jsonify
+    return jsonify(create_character_selection_flex())
