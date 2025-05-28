@@ -2,14 +2,19 @@ from flask import Flask, request
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from supabase import create_client
 import openai
 import os
 
-# 環境変数からキーを取得
+# 環境変数
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# 初期化
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 openai.api_key = OPENAI_API_KEY
@@ -36,6 +41,16 @@ def webhook():
 def handle_message(event):
     user_input = event.message.text
     reply = generate_gpt_reply(user_input)
+
+    # データベース保存
+    user_id = event.source.user_id
+    save_conversation(
+    user_id=event.source.user_id,
+    character="未設定",  # 後で会話スタイルを選ばせるように拡張可能
+    message=user_input,
+    reply=reply
+)
+
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply)
@@ -56,6 +71,18 @@ def generate_gpt_reply(user_input):
         return response["choices"][0]["message"]["content"]
     except Exception as e:
         return "申し訳ありません、少し問題が発生しました。もう一度お試しください。"
+
+def save_conversation(user_id, character, message, reply):
+    try:
+        response = supabase.table("chat_logs").insert({
+            "user_id": user_id,
+            "character": character,
+            "message": message,
+            "reply": reply
+        }).execute()
+        print("Supabase Insert Success:", response)
+    except Exception as e:
+        print("Supabase Insert Error:", e)
 
 if __name__ == "__main__":
     app.run(debug=True)
