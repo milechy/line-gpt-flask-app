@@ -18,7 +18,7 @@ httpx==0.28.1
 hyperframe==6.1.0
 idna==3.10
 iniconfig==2.1.0
-line-bot-sdk==3.7.0
+line-bot-sdk>=3.11.0
 multidict==6.4.4
 openai==1.14.3
 packaging==25.0
