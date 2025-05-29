@@ -130,8 +130,8 @@ def create_character_selection_flex():
                     "type": "box",
                     "layout": "vertical",
                     "contents": [
-                        {"type": "text", "text": "柚葉（ゆずは）", "weight": "bold", "size": "lg"},
-                        {"type": "text", "text": "明るく元気。はっきりしたアドバイスをくれるタイプ。", "wrap": True, "margin": "md"}
+                        {"type": "text", "text": "1. ツンデレタイプ（柚葉）💢", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "「べ、別にあんたのためじゃないけど…ちゃんと診断してあげるわよ！」", "wrap": True, "margin": "md"}
                     ]
                 },
                 "footer": {
@@ -152,8 +152,8 @@ def create_character_selection_flex():
                     "type": "box",
                     "layout": "vertical",
                     "contents": [
-                        {"type": "text", "text": "優芽（ゆめ）", "weight": "bold", "size": "lg"},
-                        {"type": "text", "text": "丁寧で穏やか。初心者に寄り添うサポート型。", "wrap": True, "margin": "md"}
+                        {"type": "text", "text": "2. ナヨナヨタイプ（優芽）🌷", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "「あの…よかったら、いっしょに解決できたら…嬉しいです…」", "wrap": True, "margin": "md"}
                     ]
                 },
                 "footer": {
@@ -174,8 +174,8 @@ def create_character_selection_flex():
                     "type": "box",
                     "layout": "vertical",
                     "contents": [
-                        {"type": "text", "text": "澪（れい）", "weight": "bold", "size": "lg"},
-                        {"type": "text", "text": "クールで分析的。数値やデータに強い。", "wrap": True, "margin": "md"}
+                        {"type": "text", "text": "3. メンヘラタイプ（澪）💧", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "「わたし、あなたのためだけに診断するから…他のAIなんて見ないで…」", "wrap": True, "margin": "md"}
                     ]
                 },
                 "footer": {
@@ -196,8 +196,8 @@ def create_character_selection_flex():
                     "type": "box",
                     "layout": "vertical",
                     "contents": [
-                        {"type": "text", "text": "剣太郎（けんたろう）", "weight": "bold", "size": "lg"},
-                        {"type": "text", "text": "熱血系。情熱的に背中を押してくれる。", "wrap": True, "margin": "md"}
+                        {"type": "text", "text": "4. 武士タイプ（剣太郎）⚔️", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "「心得た。貴殿の悩み、拙者が責任をもって見積もろうぞ。」", "wrap": True, "margin": "md"}
                     ]
                 },
                 "footer": {
@@ -218,8 +218,8 @@ def create_character_selection_flex():
                     "type": "box",
                     "layout": "vertical",
                     "contents": [
-                        {"type": "text", "text": "鈴木（すずき）", "weight": "bold", "size": "lg"},
-                        {"type": "text", "text": "ベテランタイプ。実務視点でズバッと助言。", "wrap": True, "margin": "md"}
+                        {"type": "text", "text": "5. ビジネス敬語タイプ（鈴木）📎", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "「お世話になっております。順次、ヒアリングを進めさせていただきます。」", "wrap": True, "margin": "md"}
                     ]
                 },
                 "footer": {
@@ -240,8 +240,8 @@ def create_character_selection_flex():
                     "type": "box",
                     "layout": "vertical",
                     "contents": [
-                        {"type": "text", "text": "陽菜（ひな）", "weight": "bold", "size": "lg"},
-                        {"type": "text", "text": "やさしくて相談しやすい癒し系。話し方はふんわり。", "wrap": True, "margin": "md"}
+                        {"type": "text", "text": "6. フレンドリータイプ（陽菜）🌞", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "「はーいっ！一緒に楽しくお悩み解決していこうねっ♪」", "wrap": True, "margin": "md"}
                     ]
                 },
                 "footer": {
