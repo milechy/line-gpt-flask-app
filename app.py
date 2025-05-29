@@ -1,6 +1,21 @@
 from flask import Flask, request, abort
-from linebot.models import FlexSendMessage, TextSendMessage, MessageEvent, TextMessage
+from linebot.models import FlexSendMessage, TextSendMessage, MessageEvent, TextMessage, ImageMessage
 from linebot import LineBotApi, WebhookHandler
+import tempfile
+import uuid
+import boto3
+from botocore.exceptions import NoCredentialsError
+
+WASABI_ACCESS_KEY = os.getenv("WASABI_ACCESS_KEY")
+WASABI_SECRET_KEY = os.getenv("WASABI_SECRET_KEY")
+WASABI_BUCKET_NAME = os.getenv("WASABI_BUCKET_NAME")
+WASABI_ENDPOINT_URL = "https://s3.ap-northeast-1.wasabisys.com"
+
+s3_client = boto3.client('s3',
+    endpoint_url=WASABI_ENDPOINT_URL,
+    aws_access_key_id=WASABI_ACCESS_KEY,
+    aws_secret_access_key=WASABI_SECRET_KEY
+)
 
 import os
 
@@ -262,3 +277,41 @@ def create_character_selection_flex():
 def debug_flex():
     from flask import jsonify
     return jsonify(create_character_selection_flex())
+@handler.add(MessageEvent, message=ImageMessage)
+def handle_image(event):
+    user_id = event.source.user_id
+    print(f"[DEBUG] Received image from user: {user_id}")
+    try:
+        message_id = event.message.id
+        # Save image to temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tf:
+            temp_image_path = tf.name
+            content = line_bot_api.get_message_content(message_id)
+            for chunk in content.iter_content():
+                tf.write(chunk)
+        print(f"[DEBUG] Image saved temporarily at: {temp_image_path}")
+        # Generate unique filename for S3
+        unique_filename = f"{user_id}_{uuid.uuid4().hex}.jpg"
+        # Upload to WASABI (S3 compatible storage)
+        try:
+            s3_client.upload_file(temp_image_path, WASABI_BUCKET_NAME, unique_filename)
+            print(f"[DEBUG] Image uploaded to WASABI as: {unique_filename}")
+            reply = "画像を受け取りました！安全に保存しました。"
+        except NoCredentialsError as nce:
+            print("[ERROR] WASABI credentials not found:", nce)
+            reply = "画像の保存中に認証エラーが発生しました。"
+        except Exception as e:
+            print("[ERROR] Failed to upload to WASABI:", e)
+            reply = "画像の保存中にエラーが発生しました。"
+        finally:
+            try:
+                os.remove(temp_image_path)
+                print(f"[DEBUG] Temporary file deleted: {temp_image_path}")
+            except Exception as e:
+                print("[WARN] Failed to delete temp image:", e)
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
+    except Exception as e:
+        import traceback
+        print("[ERROR] Exception in handle_image:", e)
+        traceback.print_exc()
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="画像処理中にエラーが発生しました。"))
