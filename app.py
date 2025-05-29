@@ -1,29 +1,23 @@
-from flask import Flask, request, jsonify
-from PIL import Image
-import pytesseract
-import io
 import base64
+import json
+import requests
 
-app = Flask(__name__)
+# 1. sample.jpg を base64 でエンコード
+with open("sample.jpg", "rb") as image_file:
+    encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
 
-@app.route("/")
-def health_check():
-    return "OCR Flask App is running!"
+# 2. FlaskアプリにPOST
+response = requests.post(
+    "http://localhost:5050/ocr",
+    headers={"Content-Type": "application/json"},
+    data=json.dumps({"image": encoded_string})
+)
 
-@app.route("/ocr", methods=["POST"])
-def ocr_image():
-    try:
-        # 画像をbase64で受け取る前提
-        data = request.get_json()
-        base64_image = data.get("image")
+# 3. 結果表示
+print(response.status_code)
 
-        if not base64_image:
-            return jsonify({"error": "画像データがありません"}), 400
+result_text = response.json().get("text", "")
+cleaned_text = result_text.replace("\\n", "\n").replace("\\t", "\t").strip()
 
-        image_data = base64.b64decode(base64_image)
-        image = Image.open(io.BytesIO(image_data))
-        text = pytesseract.image_to_string(image, lang="jpn+eng")
-
-        return jsonify({"text": text})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+print("=== OCR結果 ===")
+print(cleaned_text)
