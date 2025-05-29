@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, abort
 from linebot.models import FlexSendMessage, TextSendMessage, MessageEvent, TextMessage, ImageMessage
 from linebot import LineBotApi, WebhookHandler
@@ -16,8 +17,6 @@ s3_client = boto3.client('s3',
     aws_access_key_id=WASABI_ACCESS_KEY,
     aws_secret_access_key=WASABI_SECRET_KEY
 )
-
-import os
 
 
 # --- LINE credentials are now taken from environment variables ---
