@@ -10,6 +10,7 @@ from botocore.exceptions import NoCredentialsError
 WASABI_ACCESS_KEY = os.getenv("WASABI_ACCESS_KEY")
 WASABI_SECRET_KEY = os.getenv("WASABI_SECRET_KEY")
 WASABI_BUCKET_NAME = os.getenv("WASABI_BUCKET_NAME")
+print(f"[DEBUG] Using WASABI bucket: {WASABI_BUCKET_NAME}")
 WASABI_ENDPOINT_URL = "https://s3.ap-northeast-1.wasabisys.com"
 
 s3_client = boto3.client('s3',
