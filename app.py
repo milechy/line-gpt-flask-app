@@ -1,19 +1,29 @@
-import sys
-import pytesseract
+from flask import Flask, request, jsonify
 from PIL import Image
+import pytesseract
+import io
+import base64
 
-if len(sys.argv) < 2:
-    print("⚠️ 画像ファイル名を指定してください。例: python ocr_test.py sample.jpg")
-    sys.exit(1)
+app = Flask(__name__)
 
-image_path = sys.argv[1]
+@app.route("/")
+def health_check():
+    return "OCR Flask App is running!"
 
-try:
-    image = Image.open(image_path)
-    text = pytesseract.image_to_string(image, lang="eng")
-    print("=== OCR結果 ===")
-    print(text)
-except FileNotFoundError:
-    print(f"⚠️ ファイルが見つかりません: {image_path}")
-except Exception as e:
-    print(f"❌ エラーが発生しました: {e}")
+@app.route("/ocr", methods=["POST"])
+def ocr_image():
+    try:
+        # 画像をbase64で受け取る前提
+        data = request.get_json()
+        base64_image = data.get("image")
+
+        if not base64_image:
+            return jsonify({"error": "画像データがありません"}), 400
+
+        image_data = base64.b64decode(base64_image)
+        image = Image.open(io.BytesIO(image_data))
+        text = pytesseract.image_to_string(image, lang="jpn+eng")
+
+        return jsonify({"text": text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
