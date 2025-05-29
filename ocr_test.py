@@ -1,4 +1,7 @@
 import os
+import pytesseract
+from PIL import Image
+import io
 import sys
 import pytesseract
 from PIL import Image
