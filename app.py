@@ -2,6 +2,7 @@ import base64
 import json
 import requests
 from pathlib import Path
+from flask import Flask, request, jsonify
 
 def encode_image_to_base64(image_path: str) -> str:
     try:
@@ -49,5 +50,21 @@ def main():
     else:
         print("OCR結果が取得できませんでした。")
 
+app = Flask(__name__)
+
+@app.route("/")
+def index():
+    return "OCR Flask App is running!"
+
+@app.route("/ocr", methods=["POST"])
+def ocr_endpoint():
+    data = request.get_json()
+    if not data or "image" not in data:
+        return jsonify({"error": "画像データが見つかりません"}), 400
+
+    encoded_image = data["image"]
+    result = send_image_to_ocr_api(encoded_image)
+    return jsonify(result)
+
 if __name__ == "__main__":
-    main()
+    app.run(host="0.0.0.0", port=5050)
