@@ -122,45 +122,141 @@ def generate_gpt_reply(user_input, character):
 
 def create_character_selection_flex():
     return {
-        "type": "bubble",
-        "body": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-                {"type": "text", "text": "キャラクターを選んでください", "weight": "bold", "size": "lg", "margin": "md"},
-                {"type": "separator", "margin": "md"},
-                {
-                    "type": "button",
-                    "action": {"type": "postback", "label": "柚葉", "data": "SET_CHARACTER:柚葉"},
-                    "style": "primary"
+        "type": "carousel",
+        "contents": [
+            {
+                "type": "bubble",
+                "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {"type": "text", "text": "柚葉（ゆずは）", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "明るく元気。はっきりしたアドバイスをくれるタイプ。", "wrap": True, "margin": "md"}
+                    ]
                 },
-                {
-                    "type": "button",
-                    "action": {"type": "postback", "label": "優芽", "data": "SET_CHARACTER:優芽"},
-                    "style": "primary"
-                },
-                {
-                    "type": "button",
-                    "action": {"type": "postback", "label": "澪", "data": "SET_CHARACTER:澪"},
-                    "style": "primary"
-                },
-                {
-                    "type": "button",
-                    "action": {"type": "postback", "label": "剣太郎", "data": "SET_CHARACTER:剣太郎"},
-                    "style": "primary"
-                },
-                {
-                    "type": "button",
-                    "action": {"type": "postback", "label": "鈴木", "data": "SET_CHARACTER:鈴木"},
-                    "style": "primary"
-                },
-                {
-                    "type": "button",
-                    "action": {"type": "postback", "label": "陽菜", "data": "SET_CHARACTER:陽菜"},
-                    "style": "primary"
+                "footer": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "action": {"type": "postback", "label": "このキャラにする", "data": "SET_CHARACTER:柚葉"}
+                        }
+                    ]
                 }
-            ]
-        }
+            },
+            {
+                "type": "bubble",
+                "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {"type": "text", "text": "優芽（ゆめ）", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "丁寧で穏やか。初心者に寄り添うサポート型。", "wrap": True, "margin": "md"}
+                    ]
+                },
+                "footer": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "action": {"type": "postback", "label": "このキャラにする", "data": "SET_CHARACTER:優芽"}
+                        }
+                    ]
+                }
+            },
+            {
+                "type": "bubble",
+                "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {"type": "text", "text": "澪（れい）", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "クールで分析的。数値やデータに強い。", "wrap": True, "margin": "md"}
+                    ]
+                },
+                "footer": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "action": {"type": "postback", "label": "このキャラにする", "data": "SET_CHARACTER:澪"}
+                        }
+                    ]
+                }
+            },
+            {
+                "type": "bubble",
+                "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {"type": "text", "text": "剣太郎（けんたろう）", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "熱血系。情熱的に背中を押してくれる。", "wrap": True, "margin": "md"}
+                    ]
+                },
+                "footer": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "action": {"type": "postback", "label": "このキャラにする", "data": "SET_CHARACTER:剣太郎"}
+                        }
+                    ]
+                }
+            },
+            {
+                "type": "bubble",
+                "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {"type": "text", "text": "鈴木（すずき）", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "ベテランタイプ。実務視点でズバッと助言。", "wrap": True, "margin": "md"}
+                    ]
+                },
+                "footer": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "action": {"type": "postback", "label": "このキャラにする", "data": "SET_CHARACTER:鈴木"}
+                        }
+                    ]
+                }
+            },
+            {
+                "type": "bubble",
+                "body": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {"type": "text", "text": "陽菜（ひな）", "weight": "bold", "size": "lg"},
+                        {"type": "text", "text": "やさしくて相談しやすい癒し系。話し方はふんわり。", "wrap": True, "margin": "md"}
+                    ]
+                },
+                "footer": {
+                    "type": "box",
+                    "layout": "vertical",
+                    "contents": [
+                        {
+                            "type": "button",
+                            "style": "primary",
+                            "action": {"type": "postback", "label": "このキャラにする", "data": "SET_CHARACTER:陽菜"}
+                        }
+                    ]
+                }
+            }
+        ]
     }
 @app.route("/debug/flex")
 def debug_flex():
