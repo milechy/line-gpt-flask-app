@@ -1,6 +1,4 @@
 import base64
-import json
-import requests
 from pathlib import Path
 from flask import Flask, request, jsonify
 
@@ -15,21 +13,10 @@ def encode_image_to_base64(image_path: str) -> str:
         print(f"画像エンコード中にエラーが発生しました: {e}")
         return ""
 
-def send_image_to_ocr_api(encoded_image: str, api_url: str = "http://localhost:5050/ocr") -> dict:
-    if not encoded_image:
-        return {}
 
-    try:
-        response = requests.post(
-            api_url,
-            headers={"Content-Type": "application/json"},
-            data=json.dumps({"image": encoded_image})
-        )
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        print(f"OCR APIへのリクエストに失敗しました: {e}")
-        return {}
+# 仮のOCR処理（将来は pytesseract などに置き換え）
+def dummy_ocr_process(encoded_image: str) -> str:
+    return "仮のOCR結果\nこれはサンプルテキストです。"
 
 def clean_text(raw_text: str) -> str:
     return raw_text.replace("\\n", "\n").replace("\\t", "\t").strip()
@@ -42,13 +29,9 @@ def main():
         return
 
     encoded_image = encode_image_to_base64(image_path)
-    result = send_image_to_ocr_api(encoded_image)
-
-    if "text" in result:
-        print("=== OCR結果 ===")
-        print(clean_text(result["text"]))
-    else:
-        print("OCR結果が取得できませんでした。")
+    text = dummy_ocr_process(encoded_image)
+    print("=== OCR結果 ===")
+    print(clean_text(text))
 
 app = Flask(__name__)
 
@@ -63,8 +46,11 @@ def ocr_endpoint():
         return jsonify({"error": "画像データが見つかりません"}), 400
 
     encoded_image = data["image"]
-    result = send_image_to_ocr_api(encoded_image)
-    return jsonify(result)
+    text = dummy_ocr_process(encoded_image)
+    return jsonify({"text": clean_text(text)})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050)
+
+# WSGIサーバー用にアプリケーションを指定
+application = app
