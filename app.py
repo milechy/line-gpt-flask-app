@@ -47,6 +47,7 @@ def ocr_endpoint():
 
     encoded_image = data["image"]
     text = dummy_ocr_process(encoded_image)
+    send_webhook_notification("OCRリクエストが処理されました。")
     return jsonify({"text": clean_text(text)})
 
 if __name__ == "__main__":
@@ -54,3 +55,19 @@ if __name__ == "__main__":
 
 # WSGIサーバー用にアプリケーションを指定
 application = app
+
+# Webhook通知用関数
+import requests
+
+def send_webhook_notification(message: str):
+    webhook_url = "https://line-gpt-flask-app.onrender.com/webhook"
+    try:
+        response = requests.post(
+            webhook_url,
+            json={"text": message},
+            headers={"Content-Type": "application/json"}
+        )
+        if response.status_code != 200:
+            print(f"Webhook送信エラー: {response.status_code}, {response.text}")
+    except Exception as e:
+        print(f"Webhook送信中にエラーが発生しました: {e}")
