@@ -9,6 +9,9 @@ import os
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
+# 明示的にTesseractコマンドのパスを指定
+pytesseract.pytesseract.tesseract_cmd = os.environ.get("TESSERACT_CMD", "/usr/bin/tesseract")
+
 app = Flask(__name__)
 load_dotenv()
 
