@@ -42,7 +42,27 @@ def ocr():
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    return "Webhook received", 200
+    try:
+        payload = request.json
+        events = payload.get("events", [])
+        for event in events:
+            user_id = event["source"]["userId"]
+            message = event["message"]["text"]
+            print(f"[Webhook] user_id: {user_id}, message: {message}")
+
+            # Supabaseに保存
+            supabase.table("chat_logs").insert({
+                "user_id": user_id,
+                "character": "LINE",
+                "message": message,
+                "reply": "（返信未設定）",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }).execute()
+
+        return "OK", 200
+    except Exception as e:
+        print(f"[Webhook ERROR] {e}")
+        return "NG", 500
 
 if __name__ == "__main__":
     try:
