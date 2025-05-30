@@ -1,3 +1,22 @@
+import base64
+import json
+from flask import Flask, request, jsonify
+from PIL import Image
+import pytesseract
+import io
+from supabase import create_client
+import os
+from datetime import datetime, timezone
+from dotenv import load_dotenv
+
+app = Flask(__name__)
+load_dotenv()
+
+# Supabase client setup
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 @app.route("/consultation", methods=["POST"])
 def consultation():
     try:
@@ -61,23 +80,6 @@ def consultation():
     except Exception as e:
         print(f"[Consultation ERROR] {e}")
         return jsonify({"error": str(e)}), 500
-import base64
-import json
-from flask import Flask, request, jsonify
-from PIL import Image
-import pytesseract
-import io
-from supabase import create_client
-import os
-from datetime import datetime, timezone
-from dotenv import load_dotenv
-app = Flask(__name__)
-load_dotenv()
-
-# Supabase client setup
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 @app.route("/ocr", methods=["POST"])
 def ocr():
