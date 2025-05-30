@@ -1,73 +1,50 @@
 import base64
-from pathlib import Path
-from flask import Flask, request, jsonify
+import json
+import requests
+import sys
 
-def encode_image_to_base64(image_path: str) -> str:
+def encode_image_to_base64(image_path):
     try:
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode("utf-8")
     except FileNotFoundError:
-        print(f"エラー: ファイルが見つかりません - {image_path}")
-        return ""
+        print(f"Error: ファイルが見つかりません: {image_path}")
+        sys.exit(1)
     except Exception as e:
-        print(f"画像エンコード中にエラーが発生しました: {e}")
-        return ""
+        print(f"画像の読み込み中にエラーが発生しました: {e}")
+        sys.exit(1)
 
-
-# 仮のOCR処理（将来は pytesseract などに置き換え）
-def dummy_ocr_process(encoded_image: str) -> str:
-    return "仮のOCR結果\nこれはサンプルテキストです。"
-
-def clean_text(raw_text: str) -> str:
-    return raw_text.replace("\\n", "\n").replace("\\t", "\t").strip()
+def post_image_for_ocr(encoded_string, url):
+    headers = {"Content-Type": "application/json"}
+    data = json.dumps({"image": encoded_string})
+    try:
+        response = requests.post(url, headers=headers, data=data)
+        response.raise_for_status()
+        return response
+    except requests.exceptions.RequestException as e:
+        print(f"OCRリクエスト中にエラーが発生しました: {e}")
+        sys.exit(1)
 
 def main():
     image_path = "sample.jpg"
+    ocr_url = "http://localhost:5050/ocr"
 
-    if not Path(image_path).exists():
-        print(f"画像ファイルが存在しません: {image_path}")
-        return
+    print("画像をエンコード中...")
+    encoded_string = encode_image_to_base64(image_path)
 
-    encoded_image = encode_image_to_base64(image_path)
-    text = dummy_ocr_process(encoded_image)
-    print("=== OCR結果 ===")
-    print(clean_text(text))
+    print("OCRサーバーへ送信中...")
+    response = post_image_for_ocr(encoded_string, ocr_url)
 
-app = Flask(__name__)
+    print(f"ステータスコード: {response.status_code}")
 
-@app.route("/")
-def index():
-    return "OCR Flask App is running!"
-
-@app.route("/ocr", methods=["POST"])
-def ocr_endpoint():
-    data = request.get_json()
-    if not data or "image" not in data:
-        return jsonify({"error": "画像データが見つかりません"}), 400
-
-    encoded_image = data["image"]
-    text = dummy_ocr_process(encoded_image)
-    send_webhook_notification("OCRリクエストが処理されました。")
-    return jsonify({"text": clean_text(text)})
+    try:
+        result_text = response.json().get("text", "")
+        cleaned_text = result_text.replace("\\n", "\n").replace("\\t", "\t").strip()
+        print("=== OCR結果 ===")
+        print(cleaned_text)
+    except Exception as e:
+        print(f"レスポンスの解析中にエラーが発生しました: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5050)
-
-# WSGIサーバー用にアプリケーションを指定
-application = app
-
-# Webhook通知用関数
-import requests
-
-def send_webhook_notification(message: str):
-    webhook_url = "https://line-gpt-flask-app.onrender.com/webhook"
-    try:
-        response = requests.post(
-            webhook_url,
-            json={"text": message},
-            headers={"Content-Type": "application/json"}
-        )
-        if response.status_code != 200:
-            print(f"Webhook送信エラー: {response.status_code}, {response.text}")
-    except Exception as e:
-        print(f"Webhook送信中にエラーが発生しました: {e}")
+    main()
