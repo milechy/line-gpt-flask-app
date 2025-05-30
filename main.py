@@ -6,7 +6,7 @@ import pytesseract
 import io
 from supabase import create_client
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -32,13 +32,17 @@ def ocr():
                 "character": "OCR",
                 "message": "[画像アップロード]",
                 "reply": text,
-                "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }).execute()
         except Exception as e:
             print(f"[Supabase ERROR] {e}")
         return jsonify({"text": text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    return "Webhook received", 200
 
 if __name__ == "__main__":
     try:
@@ -47,7 +51,7 @@ if __name__ == "__main__":
             "character": "OCR",
             "message": "ローカルテストメッセージ",
             "reply": "これはローカルからの挿入テストです。",
-            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }).execute()
         print("✅ Supabase insert 成功:", result)
     except Exception as e:
