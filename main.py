@@ -71,9 +71,8 @@ from supabase import create_client
 import os
 from datetime import datetime, timezone
 from dotenv import load_dotenv
-load_dotenv()
-
 app = Flask(__name__)
+load_dotenv()
 
 # Supabase client setup
 SUPABASE_URL = os.getenv("SUPABASE_URL")
