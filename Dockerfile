@@ -13,6 +13,9 @@ WORKDIR /app
 # アプリファイルをコピー
 COPY . /app
 
+# Tesseractコマンドのパスを環境変数で明示
+ENV TESSERACT_CMD=/usr/bin/tesseract
+
 # 依存関係をインストール
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -20,4 +23,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 5000
 
 # Flaskアプリを起動
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "main:app"]
